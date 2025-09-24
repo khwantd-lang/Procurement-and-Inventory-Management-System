@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบติดตามงานพัสดุ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">ระบบติดตามงานพัสดุ</h1>
+            <p class="text-gray-600">จัดการและติดตามการจัดซื้อจัดจ้างอย่างมีประสิทธิภาพ</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">งบประมาณทั้งหมด</p>
+                        <p class="text-2xl font-bold text-blue-600" id="totalBudget">5,500,000</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">ใช้ไปแล้ว</p>
+                        <p class="text-2xl font-bold text-green-600" id="usedBudget">3,250,000</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">คงเหลือ</p>
+                        <p class="text-2xl font-bold text-orange-600" id="remainingBudget">2,250,000</p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">รายการทั้งหมด</p>
+                        <p class="text-2xl font-bold text-purple-600" id="totalItems">12</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">สถานะการดำเนินการ</h3>
+                <canvas id="statusChart" width="400" height="300"></canvas>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">งบประมาณตามหมวดหมู่</h3>
+                <canvas id="budgetChart" width="400" height="300"></canvas>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">งบประมาณตามปี</h3>
+                <canvas id="yearChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Budget Type Chart -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">งบประมาณตามหมวดงบประมาณ</h3>
+            <canvas id="budgetTypeChart" width="800" height="400"></canvas>
+        </div>
+
+        <!-- Procurement List -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-800">รายการจัดซื้อจัดจ้าง</h3>
+                <div class="flex gap-3">
+                    <div class="relative">
+                        <button onclick="toggleExportMenu()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            ส่งออกข้อมูล
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="exportMenu" class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-10 hidden">
+                            <div class="py-2">
+                                <button onclick="exportToGoogleSheets('all')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M19.5 3H4.5C3.12 3 2 4.12 2 5.5v13C2 19.88 3.12 21 4.5 21h15c1.38 0 2.5-1.12 2.5-2.5v-13C22 4.12 20.88 3 19.5 3zM19 18H5V6h14v12zM7 8h2v2H7V8zm0 3h2v2H7v-2zm0 3h2v2H7v-2zm3-6h7v2h-7V8zm0 3h7v2h-7v-2zm0 3h7v2h-7v-2z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">ส่งออกทั้งหมด</div>
+                                        <div class="text-sm text-gray-500">ส่งออกข้อมูลทั้งหมดเป็น Google Sheets</div>
+                                    </div>
+                                </button>
+                                <button onclick="exportToGoogleSheets('filtered')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">ส่งออกข้อมูลที่กรอง</div>
+                                        <div class="text-sm text-gray-500">ส่งออกเฉพาะข้อมูลที่แสดงอยู่</div>
+                                    </div>
+                                </button>
+                                <button onclick="exportToGoogleSheets('summary')" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">ส่งออกสรุปข้อมูล</div>
+                                        <div class="text-sm text-gray-500">ส่งออกสรุปงบประมาณและสถิติ</div>
+                                    </div>
+                                </button>
+                                <div class="border-t border-gray-100 my-2"></div>
+                                <button onclick="exportToCSV()" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">ส่งออก CSV</div>
+                                        <div class="text-sm text-gray-500">ดาวน์โหลดไฟล์ CSV</div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="addNewItem()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        + เพิ่มรายการใหม่
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter and Search -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+                <div class="lg:col-span-2">
+                    <input type="text" id="searchInput" placeholder="ค้นหารายการ..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           onkeyup="filterItems()">
+                </div>
+                <select id="statusFilter" onchange="filterItems()" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">ทุกสถานะ</option>
+                    <option value="รอดำเนินการ">รอดำเนินการ</option>
+                    <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                    <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                    <option value="ยกเลิก">ยกเลิก</option>
+                </select>
+                <select id="budgetTypeFilter" onchange="filterItems()" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">ทุกหมวดงบประมาณ</option>
+                    <option value="งบประมาณรายได้">งบประมาณรายได้</option>
+                    <option value="งบประมาณแผ่นดิน">งบประมาณแผ่นดิน</option>
+                    <option value="งบประมาณผลิตแพทย์เพิ่ม">งบประมาณผลิตแพทย์เพิ่ม</option>
+                    <option value="งบประมาณสะสม">งบประมาณสะสม</option>
+                    <option value="งบประมาณอื่นๆ">งบประมาณอื่นๆ</option>
+                </select>
+                <select id="procurementMethodFilter" onchange="filterItems()" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">ทุกวิธีการจัดซื้อ</option>
+                    <option value="วิธีตกลงราคา (วิธีเฉพาะเจาะจง)">วิธีตกลงราคา</option>
+                    <option value="วิธีคัดเลือก (Selective Bidding)">วิธีคัดเลือก</option>
+                    <option value="วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)">วิธีประกวดราคาอิเล็กทรอนิกส์</option>
+                </select>
+                <select id="fiscalYearFilter" onchange="filterItems()" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">ทุกปีงบประมาณ</option>
+                    <option value="2567">2567</option>
+                    <option value="2566">2566</option>
+                    <option value="2565">2565</option>
+                </select>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full table-auto">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รหัส</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายการ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมวดหมู่</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมวดงบประมาณ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วิธีการจัดซื้อ/จ้าง</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ปีงบประมาณ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">งบประมาณ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้รับผิดชอบ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="procurementTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="itemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 id="modalTitle" class="text-xl font-semibold text-gray-800 mb-4">เพิ่มรายการใหม่</h3>
+            <form id="itemForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">รายการ</label>
+                        <input type="text" id="itemName" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่</label>
+                        <select id="itemCategory" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">เลือกหมวดหมู่</option>
+                            <option value="อุปกรณ์สำนักงาน">อุปกรณ์สำนักงาน</option>
+                            <option value="เครื่องใช้ไฟฟ้า">เครื่องใช้ไฟฟ้า</option>
+                            <option value="วัสดุก่อสร้าง">วัสดุก่อสร้าง</option>
+                            <option value="ยานพาหนะ">ยานพาหนะ</option>
+                            <option value="บริการ">บริการ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">หมวดงบประมาณ</label>
+                        <select id="itemBudgetType" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">เลือกหมวดงบประมาณ</option>
+                            <option value="งบประมาณรายได้">งบประมาณรายได้</option>
+                            <option value="งบประมาณแผ่นดิน">งบประมาณแผ่นดิน</option>
+                            <option value="งบประมาณผลิตแพทย์เพิ่ม">งบประมาณผลิตแพทย์เพิ่ม</option>
+                            <option value="งบประมาณสะสม">งบประมาณสะสม</option>
+                            <option value="งบประมาณอื่นๆ">งบประมาณอื่นๆ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">วิธีการจัดซื้อ/จ้าง</label>
+                        <select id="itemProcurementMethod" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">เลือกวิธีการจัดซื้อ/จ้าง</option>
+                            <option value="วิธีตกลงราคา (วิธีเฉพาะเจาะจง)">วิธีตกลงราคา (วิธีเฉพาะเจาะจง)</option>
+                            <option value="วิธีคัดเลือก (Selective Bidding)">วิธีคัดเลือก (Selective Bidding)</option>
+                            <option value="วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)">วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ปีงบประมาณ</label>
+                        <select id="itemFiscalYear" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">เลือกปีงบประมาณ</option>
+                            <option value="2567">2567</option>
+                            <option value="2566">2566</option>
+                            <option value="2565">2565</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">งบประมาณ (บาท)</label>
+                        <input type="number" id="itemBudget" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ผู้รับผิดชอบ</label>
+                        <input type="text" id="itemResponsible" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
+                        <select id="itemStatus" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="รอดำเนินการ">รอดำเนินการ</option>
+                            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                            <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                            <option value="ยกเลิก">ยกเลิก</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="closeModal()" 
+                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        บันทึก
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        let procurementData = [
+            { id: 'PO001', name: 'เครื่องคอมพิวเตอร์ตั้งโต๊ะ', category: 'เครื่องใช้ไฟฟ้า', budgetType: 'งบประมาณรายได้', procurementMethod: 'วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)', fiscalYear: '2567', budget: 450000, responsible: 'นายสมชาย ใจดี', status: 'เสร็จสิ้น', date: '2024-01-15' },
+            { id: 'PO002', name: 'โต๊ะทำงานไม้สัก', category: 'อุปกรณ์สำนักงาน', budgetType: 'งบประมาณแผ่นดิน', procurementMethod: 'วิธีตกลงราคา (วิธีเฉพาะเจาะจง)', fiscalYear: '2567', budget: 120000, responsible: 'นางสาวมาลี สวยงาม', status: 'กำลังดำเนินการ', date: '2024-01-20' },
+            { id: 'PO003', name: 'รถยนต์ราชการ', category: 'ยานพาหนะ', budgetType: 'งบประมาณรายได้', procurementMethod: 'วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)', fiscalYear: '2567', budget: 1200000, responsible: 'นายประยุทธ์ รักชาติ', status: 'รอดำเนินการ', date: '2024-02-01' },
+            { id: 'PO004', name: 'ปูนซีเมนต์', category: 'วัสดุก่อสร้าง', budgetType: 'งบประมาณแผ่นดิน', procurementMethod: 'วิธีคัดเลือก (Selective Bidding)', fiscalYear: '2566', budget: 85000, responsible: 'นายวิชัย ขยันทำงาน', status: 'เสร็จสิ้น', date: '2024-01-10' },
+            { id: 'PO005', name: 'เครื่องปรับอากาศ', category: 'เครื่องใช้ไฟฟ้า', budgetType: 'งบประมาณรายได้', procurementMethod: 'วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)', fiscalYear: '2567', budget: 180000, responsible: 'นางสุดา เรียบร้อย', status: 'กำลังดำเนินการ', date: '2024-01-25' },
+            { id: 'PO006', name: 'บริการทำความสะอาด', category: 'บริการ', budgetType: 'งบประมาณผลิตแพทย์เพิ่ม', procurementMethod: 'วิธีตกลงราคา (วิธีเฉพาะเจาะจง)', fiscalYear: '2567', budget: 240000, responsible: 'นายอนุชา มั่นคง', status: 'เสร็จสิ้น', date: '2024-01-05' },
+            { id: 'PO007', name: 'เครื่องพิมพ์เลเซอร์', category: 'เครื่องใช้ไฟฟ้า', budgetType: 'งบประมาณแผ่นดิน', procurementMethod: 'วิธีคัดเลือก (Selective Bidding)', fiscalYear: '2567', budget: 75000, responsible: 'นางสาวปิยะดา ฉลาด', status: 'รอดำเนินการ', date: '2024-02-05' },
+            { id: 'PO008', name: 'เก้าอี้สำนักงาน', category: 'อุปกรณ์สำนักงาน', budgetType: 'งบประมาณแผ่นดิน', procurementMethod: 'วิธีตกลงราคา (วิธีเฉพาะเจาะจง)', fiscalYear: '2566', budget: 95000, responsible: 'นายธนา มีสุข', status: 'กำลังดำเนินการ', date: '2024-01-30' },
+            { id: 'PO009', name: 'วัสดุไฟฟ้า', category: 'วัสดุก่อสร้าง', budgetType: 'งบประมาณรายได้', procurementMethod: 'วิธีคัดเลือก (Selective Bidding)', fiscalYear: '2566', budget: 150000, responsible: 'นายสมศักดิ์ ทำดี', status: 'เสร็จสิ้น', date: '2024-01-12' },
+            { id: 'PO010', name: 'บริการรักษาความปลอดภัย', category: 'บริการ', budgetType: 'งบประมาณผลิตแพทย์เพิ่ม', procurementMethod: 'วิธีตกลงราคา (วิธีเฉพาะเจาะจง)', fiscalYear: '2567', budget: 360000, responsible: 'นายกิตติ ปลอดภัย', status: 'กำลังดำเนินการ', date: '2024-01-18' },
+            { id: 'PO011', name: 'เครื่องถ่ายเอกสาร', category: 'เครื่องใช้ไฟฟ้า', budgetType: 'งบประมาณรายได้', procurementMethod: 'วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)', fiscalYear: '2565', budget: 125000, responsible: 'นางสาวจิรา เก่งงาน', status: 'รอดำเนินการ', date: '2024-02-08' },
+            { id: 'PO012', name: 'ตู้เก็บเอกสาร', category: 'อุปกรณ์สำนักงาน', budgetType: 'งบประมาณแผ่นดิน', procurementMethod: 'วิธีตกลงราคา (วิธีเฉพาะเจาะจง)', fiscalYear: '2565', budget: 65000, responsible: 'นายสุรชัย เป็นระเบียบ', status: 'ยกเลิก', date: '2024-01-22' },
+            { id: 'PO013', name: 'เครื่องมือแพทย์', category: 'เครื่องใช้ไฟฟ้า', budgetType: 'งบประมาณสะสม', procurementMethod: 'วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)', fiscalYear: '2567', budget: 320000, responsible: 'นายแพทย์สมหมาย รักษาคน', status: 'กำลังดำเนินการ', date: '2024-02-10' },
+            { id: 'PO014', name: 'วัสดุอื่นๆ', category: 'อุปกรณ์สำนักงาน', budgetType: 'งบประมาณอื่นๆ', procurementMethod: 'วิธีตกลงราคา (วิธีเฉพาะเจาะจง)', fiscalYear: '2567', budget: 45000, responsible: 'นางสาววิภา จัดการดี', status: 'รอดำเนินการ', date: '2024-02-12' }
+        ];
+
+        let editingIndex = -1;
+
+        // Initialize the system
+        function init() {
+            updateSummary();
+            renderTable();
+            createCharts();
+        }
+
+        // Update summary cards
+        function updateSummary() {
+            const totalBudget = procurementData.reduce((sum, item) => sum + item.budget, 0);
+            const usedBudget = procurementData
+                .filter(item => item.status === 'เสร็จสิ้น')
+                .reduce((sum, item) => sum + item.budget, 0);
+            const remainingBudget = totalBudget - usedBudget;
+            const totalItems = procurementData.length;
+
+            document.getElementById('totalBudget').textContent = totalBudget.toLocaleString();
+            document.getElementById('usedBudget').textContent = usedBudget.toLocaleString();
+            document.getElementById('remainingBudget').textContent = remainingBudget.toLocaleString();
+            document.getElementById('totalItems').textContent = totalItems;
+        }
+
+        // Render table
+        function renderTable(data = procurementData) {
+            const tbody = document.getElementById('procurementTable');
+            tbody.innerHTML = '';
+
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                const statusColors = {
+                    'รอดำเนินการ': 'bg-yellow-100 text-yellow-800',
+                    'กำลังดำเนินการ': 'bg-blue-100 text-blue-800',
+                    'เสร็จสิ้น': 'bg-green-100 text-green-800',
+                    'ยกเลิก': 'bg-red-100 text-red-800'
+                };
+
+                const budgetTypeColors = {
+                    'งบประมาณรายได้': 'bg-blue-100 text-blue-800',
+                    'งบประมาณแผ่นดิน': 'bg-green-100 text-green-800',
+                    'งบประมาณผลิตแพทย์เพิ่ม': 'bg-purple-100 text-purple-800',
+                    'งบประมาณสะสม': 'bg-orange-100 text-orange-800',
+                    'งบประมาณอื่นๆ': 'bg-gray-100 text-gray-800'
+                };
+
+                function getProcurementMethodColor(method) {
+                    const colors = {
+                        'วิธีตกลงราคา (วิธีเฉพาะเจาะจง)': 'bg-indigo-100 text-indigo-800',
+                        'วิธีคัดเลือก (Selective Bidding)': 'bg-teal-100 text-teal-800',
+                        'วิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding)': 'bg-cyan-100 text-cyan-800'
+                    };
+                    return colors[method] || 'bg-gray-100 text-gray-800';
+                }
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${budgetTypeColors[item.budgetType]}">${item.budgetType}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${getProcurementMethodColor(item.procurementMethod)}">${item.procurementMethod}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.fiscalYear}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">฿${item.budget.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.responsible}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColors[item.status]}">${item.status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(item.date).toLocaleDateString('th-TH')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editItem(${procurementData.indexOf(item)})" class="text-blue-600 hover:text-blue-900 mr-3">แก้ไข</button>
+                        <button onclick="deleteItem(${procurementData.indexOf(item)})" class="text-red-600 hover:text-red-900">ลบ</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Create charts
+        function createCharts() {
+            // Status Chart
+            const statusCounts = procurementData.reduce((acc, item) => {
+                acc[item.status] = (acc[item.status] || 0) + 1;
+                return acc;
+            }, {});
+
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#FEF3C7', '#DBEAFE', '#D1FAE5', '#FEE2E2'],
+                        borderColor: ['#F59E0B', '#3B82F6', '#10B981', '#EF4444'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Budget Chart by Category
+            const categoryBudgets = procurementData.reduce((acc, item) => {
+                acc[item.category] = (acc[item.category] || 0) + item.budget;
+                return acc;
+            }, {});
+
+            const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+            new Chart(budgetCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(categoryBudgets),
+                    datasets: [{
+                        label: 'งบประมาณ (บาท)',
+                        data: Object.values(categoryBudgets),
+                        backgroundColor: '#3B82F6',
+                        borderColor: '#1D4ED8',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '฿' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Year Chart
+            const yearBudgets = procurementData.reduce((acc, item) => {
+                acc[item.fiscalYear] = (acc[item.fiscalYear] || 0) + item.budget;
+                return acc;
+            }, {});
+
+            const yearCtx = document.getElementById('yearChart').getContext('2d');
+            new Chart(yearCtx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(yearBudgets).sort(),
+                    datasets: [{
+                        label: 'งบประมาณ (บาท)',
+                        data: Object.keys(yearBudgets).sort().map(year => yearBudgets[year]),
+                        backgroundColor: '#10B981',
+                        borderColor: '#059669',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '฿' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Budget Type Chart
+            const budgetTypeBudgets = procurementData.reduce((acc, item) => {
+                acc[item.budgetType] = (acc[item.budgetType] || 0) + item.budget;
+                return acc;
+            }, {});
+
+            const budgetTypeCtx = document.getElementById('budgetTypeChart').getContext('2d');
+            new Chart(budgetTypeCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(budgetTypeBudgets),
+                    datasets: [{
+                        label: 'งบประมาณ (บาท)',
+                        data: Object.values(budgetTypeBudgets),
+                        backgroundColor: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#6B7280'],
+                        borderColor: ['#1D4ED8', '#059669', '#7C3AED', '#D97706', '#4B5563'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '฿' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Filter items
+        function filterItems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const budgetTypeFilter = document.getElementById('budgetTypeFilter').value;
+            const procurementMethodFilter = document.getElementById('procurementMethodFilter').value;
+            const fiscalYearFilter = document.getElementById('fiscalYearFilter').value;
+
+            const filtered = procurementData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchTerm) || 
+                                    item.id.toLowerCase().includes(searchTerm) ||
+                                    item.category.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || item.status === statusFilter;
+                const matchesBudgetType = !budgetTypeFilter || item.budgetType === budgetTypeFilter;
+                const matchesProcurementMethod = !procurementMethodFilter || item.procurementMethod === procurementMethodFilter;
+                const matchesFiscalYear = !fiscalYearFilter || item.fiscalYear === fiscalYearFilter;
+                return matchesSearch && matchesStatus && matchesBudgetType && matchesProcurementMethod && matchesFiscalYear;
+            });
+
+            currentFilteredData = filtered;
+            renderTable(filtered);
+        }
+
+        // Modal functions
+        function addNewItem() {
+            editingIndex = -1;
+            document.getElementById('modalTitle').textContent = 'เพิ่มรายการใหม่';
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemModal').classList.remove('hidden');
+            document.getElementById('itemModal').classList.add('flex');
+        }
+
+        function editItem(index) {
+            editingIndex = index;
+            const item = procurementData[index];
+            document.getElementById('modalTitle').textContent = 'แก้ไขรายการ';
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemCategory').value = item.category;
+            document.getElementById('itemBudgetType').value = item.budgetType;
+            document.getElementById('itemProcurementMethod').value = item.procurementMethod;
+            document.getElementById('itemFiscalYear').value = item.fiscalYear;
+            document.getElementById('itemBudget').value = item.budget;
+            document.getElementById('itemResponsible').value = item.responsible;
+            document.getElementById('itemStatus').value = item.status;
+            document.getElementById('itemModal').classList.remove('hidden');
+            document.getElementById('itemModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('itemModal').classList.add('hidden');
+            document.getElementById('itemModal').classList.remove('flex');
+        }
+
+        function deleteItem(index) {
+            if (confirm('คุณต้องการลบรายการนี้หรือไม่?')) {
+                procurementData.splice(index, 1);
+                updateSummary();
+                renderTable();
+                createCharts();
+            }
+        }
+
+        // Form submission
+        document.getElementById('itemForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newItem = {
+                id: editingIndex === -1 ? 'PO' + String(procurementData.length + 1).padStart(3, '0') : procurementData[editingIndex].id,
+                name: document.getElementById('itemName').value,
+                category: document.getElementById('itemCategory').value,
+                budgetType: document.getElementById('itemBudgetType').value,
+                procurementMethod: document.getElementById('itemProcurementMethod').value,
+                fiscalYear: document.getElementById('itemFiscalYear').value,
+                budget: parseInt(document.getElementById('itemBudget').value),
+                responsible: document.getElementById('itemResponsible').value,
+                status: document.getElementById('itemStatus').value,
+                date: editingIndex === -1 ? new Date().toISOString().split('T')[0] : procurementData[editingIndex].date
+            };
+
+            if (editingIndex === -1) {
+                procurementData.push(newItem);
+            } else {
+                procurementData[editingIndex] = newItem;
+            }
+
+            updateSummary();
+            renderTable();
+            createCharts();
+            closeModal();
+        });
+
+        // Export functions
+        let currentFilteredData = procurementData;
+
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close export menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('exportMenu');
+            const button = event.target.closest('button[onclick="toggleExportMenu()"]');
+            if (!button && !menu.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        function exportToGoogleSheets(type) {
+            let dataToExport = [];
+            let filename = '';
+
+            switch(type) {
+                case 'all':
+                    dataToExport = procurementData;
+                    filename = 'รายการจัดซื้อจัดจ้าง_ทั้งหมด';
+                    break;
+                case 'filtered':
+                    dataToExport = currentFilteredData;
+                    filename = 'รายการจัดซื้อจัดจ้าง_กรองแล้ว';
+                    break;
+                case 'summary':
+                    dataToExport = generateSummaryData();
+                    filename = 'สรุปงบประมาณ';
+                    break;
+            }
+
+            // Create Google Sheets compatible CSV format
+            const csvContent = convertToCSV(dataToExport, type);
+            
+            // Create Google Sheets URL
+            const encodedData = encodeURIComponent(csvContent);
+            const googleSheetsUrl = `https://docs.google.com/spreadsheets/create?usp=sharing`;
+            
+            // Show instructions modal
+            showGoogleSheetsInstructions(csvContent, filename);
+            
+            // Close export menu
+            document.getElementById('exportMenu').classList.add('hidden');
+        }
+
+        function generateSummaryData() {
+            const totalBudget = procurementData.reduce((sum, item) => sum + item.budget, 0);
+            const usedBudget = procurementData.filter(item => item.status === 'เสร็จสิ้น').reduce((sum, item) => sum + item.budget, 0);
+            const remainingBudget = totalBudget - usedBudget;
+
+            // Budget by type
+            const budgetByType = procurementData.reduce((acc, item) => {
+                acc[item.budgetType] = (acc[item.budgetType] || 0) + item.budget;
+                return acc;
+            }, {});
+
+            // Status counts
+            const statusCounts = procurementData.reduce((acc, item) => {
+                acc[item.status] = (acc[item.status] || 0) + 1;
+                return acc;
+            }, {});
+
+            return [
+                { category: 'สรุปงบประมาณรวม', value: totalBudget.toLocaleString() + ' บาท' },
+                { category: 'งบประมาณที่ใช้แล้ว', value: usedBudget.toLocaleString() + ' บาท' },
+                { category: 'งบประมาณคงเหลือ', value: remainingBudget.toLocaleString() + ' บาท' },
+                { category: '', value: '' },
+                { category: 'งบประมาณตามประเภท', value: '' },
+                ...Object.entries(budgetByType).map(([type, amount]) => ({
+                    category: type,
+                    value: amount.toLocaleString() + ' บาท'
+                })),
+                { category: '', value: '' },
+                { category: 'สถานะการดำเนินการ', value: '' },
+                ...Object.entries(statusCounts).map(([status, count]) => ({
+                    category: status,
+                    value: count + ' รายการ'
+                }))
+            ];
+        }
+
+        function convertToCSV(data, type) {
+            if (type === 'summary') {
+                const headers = ['หมวดหมู่', 'ค่า'];
+                const csvRows = [headers.join(',')];
+                
+                data.forEach(row => {
+                    csvRows.push(`"${row.category}","${row.value}"`);
+                });
+                
+                return csvRows.join('\n');
+            } else {
+                const headers = ['รหัส', 'รายการ', 'หมวดหมู่', 'หมวดงบประมาณ', 'วิธีการจัดซื้อ/จ้าง', 'ปีงบประมาณ', 'งบประมาณ', 'ผู้รับผิดชอบ', 'สถานะ', 'วันที่'];
+                const csvRows = [headers.join(',')];
+                
+                data.forEach(item => {
+                    const row = [
+                        item.id,
+                        item.name,
+                        item.category,
+                        item.budgetType,
+                        item.procurementMethod,
+                        item.fiscalYear,
+                        item.budget,
+                        item.responsible,
+                        item.status,
+                        new Date(item.date).toLocaleDateString('th-TH')
+                    ];
+                    csvRows.push(row.map(field => `"${field}"`).join(','));
+                });
+                
+                return csvRows.join('\n');
+            }
+        }
+
+        function showGoogleSheetsInstructions(csvContent, filename) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 w-full max-w-lg mx-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19.5 3H4.5C3.12 3 2 4.12 2 5.5v13C2 19.88 3.12 21 4.5 21h15c1.38 0 2.5-1.12 2.5-2.5v-13C22 4.12 20.88 3 19.5 3zM19 18H5V6h14v12zM7 8h2v2H7V8zm0 3h2v2H7v-2zm0 3h2v2H7v-2zm3-6h7v2h-7V8zm0 3h7v2h-7v-2zm0 3h7v2h-7v-2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">ส่งออกไป Google Sheets</h3>
+                    </div>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-medium text-blue-900 mb-2">วิธีการนำเข้าข้อมูลไป Google Sheets:</h4>
+                            <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                                <li>คลิก "คัดลอกข้อมูล" ด้านล่าง</li>
+                                <li>เปิด <a href="https://sheets.google.com" target="_blank" class="underline font-medium">Google Sheets</a> ในแท็บใหม่</li>
+                                <li>สร้างชีตใหม่หรือเปิดชีตที่ต้องการ</li>
+                                <li>คลิกที่เซลล์ A1</li>
+                                <li>กด Ctrl+V (หรือ Cmd+V บน Mac) เพื่อวางข้อมูล</li>
+                                <li>เลือก "แยกข้อความเป็นคอลัมน์" หากจำเป็น</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-gray-700">ข้อมูลที่จะส่งออก:</span>
+                                <button onclick="copyToClipboard()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    📋 คัดลอกข้อมูล
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-600 bg-white border rounded p-2 max-h-32 overflow-y-auto font-mono">
+                                ${csvContent.split('\n').slice(0, 5).join('\n')}
+                                ${csvContent.split('\n').length > 5 ? '\n... และอีก ' + (csvContent.split('\n').length - 5) + ' แถว' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="copyToClipboard()" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            คัดลอกข้อมูล
+                        </button>
+                        <button onclick="openGoogleSheets()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            เปิด Google Sheets
+                        </button>
+                        <button onclick="closeInstructionsModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            ปิด
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Store CSV content for copying
+            window.currentCSVContent = csvContent;
+            
+            // Functions for the modal
+            window.copyToClipboard = function() {
+                navigator.clipboard.writeText(csvContent).then(() => {
+                    // Show success message
+                    const button = modal.querySelector('button[onclick="copyToClipboard()"]');
+                    const originalText = button.textContent;
+                    button.textContent = '✅ คัดลอกแล้ว!';
+                    button.className = button.className.replace('bg-green-600 hover:bg-green-700', 'bg-green-700');
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.className = button.className.replace('bg-green-700', 'bg-green-600 hover:bg-green-700');
+                    }, 2000);
+                }).catch(() => {
+                    alert('ไม่สามารถคัดลอกได้ กรุณาเลือกข้อความและกด Ctrl+C');
+                });
+            };
+            
+            window.openGoogleSheets = function() {
+                window.open('https://sheets.google.com', '_blank');
+            };
+            
+            window.closeInstructionsModal = function() {
+                document.body.removeChild(modal);
+                delete window.currentCSVContent;
+                delete window.copyToClipboard;
+                delete window.openGoogleSheets;
+                delete window.closeInstructionsModal;
+            };
+        }
+
+        function exportToCSV() {
+            const csvContent = convertToCSV(procurementData, 'all');
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'รายการจัดซื้อจัดจ้าง.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Close export menu
+            document.getElementById('exportMenu').classList.add('hidden');
+        }
+
+        // Update filtered data when filtering
+        function filterItems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const budgetTypeFilter = document.getElementById('budgetTypeFilter').value;
+            const fiscalYearFilter = document.getElementById('fiscalYearFilter').value;
+
+            const filtered = procurementData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchTerm) || 
+                                    item.id.toLowerCase().includes(searchTerm) ||
+                                    item.category.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || item.status === statusFilter;
+                const matchesBudgetType = !budgetTypeFilter || item.budgetType === budgetTypeFilter;
+                const matchesFiscalYear = !fiscalYearFilter || item.fiscalYear === fiscalYearFilter;
+                return matchesSearch && matchesStatus && matchesBudgetType && matchesFiscalYear;
+            });
+
+            currentFilteredData = filtered;
+            renderTable(filtered);
+        }
+
+        // Initialize on page load
+        init();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'983fab9ab4177b5e',t:'MTc1ODY4OTUyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
